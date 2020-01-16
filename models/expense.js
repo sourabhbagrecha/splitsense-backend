@@ -17,24 +17,25 @@ const expenseSchema = new Schema({
     type: String
   },
   currency: {
-    type: String
+    type: String,
+    required: true
   },
   description: {
     type: String
   },
   paidBy: [{
-    person: {
+    user: {
       type: Schema.Types.ObjectId,
-      ref: 'Person'
+      ref: 'User'
     },
     amount: {
       type: Number
     }
   }],
   splitBy: [{
-    person: {
+    user: {
       type: Schema.Types.ObjectId,
-      ref: 'Person'
+      ref: 'User'
     },
     amount: {
       type: Number
@@ -42,11 +43,10 @@ const expenseSchema = new Schema({
   }],
   createdBy:{
     type: Schema.Types.ObjectId,
-    ref: 'Person'
+    ref: 'User'
   },
   belongsTo: {
-    type: Schema.Types.ObjectId,
-    ref: 'Group'
+    type: Schema.Types.ObjectId
   }
 }, {timestamps: true});
 

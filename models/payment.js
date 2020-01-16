@@ -11,12 +11,12 @@ const paymentSchema = new Schema({
   },
   paidBy: {
     type: Schema.Types.ObjectId,
-    ref: 'Person',
+    ref: 'User',
     required: true
   },
   recievedBy: {
     type: Schema.Types.ObjectId,
-    ref: 'Person',
+    ref: 'User',
     required: true
   }
 }, {timestamps: true});

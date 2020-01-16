@@ -16,7 +16,7 @@ const groupSchema = new Schema({
   },
   members: [{
     type: Schema.Types.ObjectId,
-    ref: 'Person'
+    ref: 'User'
   }],
   expenses: [{
     type: Schema.Types.ObjectId,

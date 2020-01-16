@@ -2,12 +2,20 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const friendSchema = new Schema({
-  title: {
-    type: String,
+  requester: {
+    type: Schema.Types.ObjectId,
     required: true
   },
-  category:{
-    type: String,
+  accepter:{
+    type: Schema.Types.ObjectId,
+    required: true
+  },
+  first: {
+    type: Schema.Types.ObjectId,
+    required: true
+  },
+  second: {
+    type: Schema.Types.ObjectId,
     required: true
   },
   defaultCurrency: {

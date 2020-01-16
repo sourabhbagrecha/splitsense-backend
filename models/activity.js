@@ -11,7 +11,7 @@ const activitySchema = Schema({
     required: true
   },
   refId: {
-    type: mongoose.Schema.Types.ObjectId
+    type: Schema.Types.ObjectId
   }
 }, {timestamps: true});
 
