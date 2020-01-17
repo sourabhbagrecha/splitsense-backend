@@ -33,6 +33,19 @@ exports.checkUserExistenceWithEmail = async (req, res, next) => {
   }
 }
 
+exports.findUserByGoogleId = async (req, res, next) => {
+  try {
+    const {googleId} = req.body;
+    const user = await User.findOne({ googleId }).select('_id');
+    console.log(user);
+    if(user) return res.status(200).json({msg: "User found", id: user._id});
+    else return res.status(204).json({msg: "User does not exist"});
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({msg: "Internal server error"});
+  }
+}
+
 exports.sendAnInvite = async (req, res, next) => {
   try {
     const {email} = req.body;

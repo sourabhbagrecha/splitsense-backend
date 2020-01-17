@@ -4,18 +4,12 @@ const Schema = mongoose.Schema;
 const friendSchema = new Schema({
   requester: {
     type: Schema.Types.ObjectId,
+    ref: "User",
     required: true
   },
   accepter:{
     type: Schema.Types.ObjectId,
-    required: true
-  },
-  first: {
-    type: Schema.Types.ObjectId,
-    required: true
-  },
-  second: {
-    type: Schema.Types.ObjectId,
+    ref: "User",
     required: true
   },
   defaultCurrency: {
