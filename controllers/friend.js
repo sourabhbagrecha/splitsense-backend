@@ -1,3 +1,4 @@
+const Activity = require("../models/activity");
 const Friend = require("../models/friend");
 const User = require("../models/user");
 
@@ -35,17 +36,21 @@ exports.addFriend = async (req, res, next) => {
 exports.getFriends = async (req, res, next) => {
   try {
     const {userId} = req;
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).lean();
     const friendsArray = user.friends.map(f => f.friendship);
     const friendsResponse = await Friend.find({ '_id': { $in: friendsArray }}).populate('requester', 'name email picture').populate('accepter', 'name email picture').exec();
+    console.log(userId, friendsResponse.map(f => ({requester : f.requester._id, accepter: f.accepter._id})))
     const friends = friendsResponse.map(f => {
       let friend = {_id: f._id};
-      if(f.requester._id.toString() !== userId){ // Initially I put the equal-to sign but it wasn't working as expected, but when I used not-equal-to, surprisingly it worked.
+      console.log(f.requester._id.toString(), f.accepter._id.toString(), userId);
+      if(f.requester._id.toString() === userId){ // Everything is working fine now, because the userId type and requesterId were not of the same type they caused heavy tension in the begining, Initially I put the equal-to sign but it wasn't working as expected, but when I used not-equal-to, surprisingly it worked.
         friend.name = f.accepter.name;
         friend.picture = f.accepter.picture;
-      } else {
+      } else if(f.accepter._id.toString() === userId){
         friend.name = f.requester.name;
         friend.pictue = f.requester.picture;
+      } else {
+        console.log("Hey!!I passed through somehow")
       }
       return friend;
     });
@@ -62,7 +67,8 @@ exports.getFriend = async (req, res, next) => {
     const friend = await Friend.findById(id);
     const userIsRequester = friend.requester.toString() === userId;
     const friendPerson = await User.findById(userIsRequester ? friend.accepter : friend.requester).select('email name picture');
-    return res.status(200).json({friendPerson, friend, msg: "Friend Found!"});
+    const activities = await Activity.find({ '_id': {$in : friend.activities} });
+    return res.status(200).json({friendPerson, friend, activities, msg: "Friend Found!"});
   } catch (error) {
     next(error);
   }

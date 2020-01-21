@@ -1,6 +1,19 @@
 const Activity = require('../models/activity');
 const Expense = require('../models/expense');
 const Friend = require('../models/friend');
+const User = require('../models/user');
+
+exports.getAddExpenseFriendData = async (req, res, next) => {
+  const {friendId} = req.params;
+  try {
+    const friend = await Friend.findById(friendId);
+    const participantsArray = [friend.requester, friend.accepter];
+    const participants = await User.find({"_id": { $in : participantsArray }}).select('name picture');
+    return res.status(200).json({participants, msg: "Participants found!"})
+  } catch (error) {
+    next(error);
+  }
+}
 
 exports.addExpense = async (req, res, next) => {
   try {
@@ -15,12 +28,10 @@ exports.addExpense = async (req, res, next) => {
       newExpense.belongsTo = groupId;
     }
     const expense = await Expense.create(newExpense);
-    const activity = await Activity.create({actType: "Expense", operation: "Create", refId: expense._id})
+    const activity = await Activity.create({actType: "expense", operation: "create", refId: expense._id})
     if(friendId) {
       const friend = await Friend.findByIdAndUpdate(friendId, {$push: { "activities": activity._id} })
-      console.log("+++++++++============>>>>>>");
       console.log(await Friend.findById(friendId));
-      console.log('++++++++++++++++===========')
     }
     else if(groupId) {
       await Group.findByIdAndUpdate(groupId, {$push: { "activities": activity._id} })
@@ -41,3 +52,14 @@ exports.getExpense = async (req, res, next) => {
     console.log(error);
   }
 }
+
+exports.getExpenseMeta = async (req, res, next) => {
+  const {refId} = req.params;
+  try {
+    const expense = await Expense.findById(refId).select('title amount category currency createdBy').populate('createdBy','name');
+    console.log(expense);
+    return res.status(200).json({results: expense, msg: "Expense Found!"});
+  } catch (error) {
+    next(error);
+  }
+};
