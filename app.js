@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -27,7 +28,7 @@ app.use((error, req, res, next) => {
 
 
 mongoose
-  .connect('mongodb://splitsenseapp:AxR2#K8RWzcwDe@ds155218.mlab.com:55218/splitsense', {
+  .connect(process.env.DB_URL, {
     useNewUrlParser: true
   })
   .then(results => {

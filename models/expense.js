@@ -47,6 +47,9 @@ const expenseSchema = new Schema({
   },
   belongsTo: {
     type: Schema.Types.ObjectId
+  },
+  belongsType: {
+    type: String
   }
 }, {timestamps: true});
 

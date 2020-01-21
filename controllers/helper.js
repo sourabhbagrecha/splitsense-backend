@@ -56,3 +56,13 @@ exports.sendAnInvite = async (req, res, next) => {
     next(error);
   }
 }
+
+exports.checkAuth = async (req, res, next) => {
+  try {
+    console.log(req.userId, req.emailId);
+    const reqHeaders = req.get('Authorization');
+    res.status(200).json({reqHeaders});
+  } catch (error) {
+    next(error);
+  }
+}
