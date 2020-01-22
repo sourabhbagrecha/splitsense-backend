@@ -73,3 +73,18 @@ exports.getFriend = async (req, res, next) => {
     next(error);
   }
 }
+
+exports.getFriendsForGroup = async (req, res, next) => {
+  try {
+    const {userId} = req;
+    const user = await User.findById(userId).select('friends');
+    console.log("user:::::>>", user);
+    const userFriends = user.friends.map(f => f.person);
+    console.log("userFriends:::::::>>>", userFriends);
+    const friends = await User.find({ '_id': { $in: userFriends } }).select('name picture');
+    console.log("friends::::::::>>>", friends);
+    return res.status(200).json({friends, msg: "Friends found!"});
+  } catch (error) {
+    next(error);
+  }
+}

@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const groupSchema = new Schema({
-  title: {
+  name: {
     type: String,
     required: true
   },
-  category:{
+  groupType:{
     type: String,
     required: true
   },
@@ -18,13 +18,9 @@ const groupSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User'
   }],
-  expenses: [{
+  activities: [{
     type: Schema.Types.ObjectId,
-    ref: 'Expense'
-  }],
-  payments: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Payment'
+    ref: 'Activity'
   }]
 }, {timestamps: true});
 

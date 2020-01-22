@@ -4,6 +4,6 @@ const isAuthenticated = require("../middleware/isAuthenticated");
 const groupController = require("../controllers/group");
 
 router.post('/new', isAuthenticated, groupController.createGroup);
-router.get('/group/:id', groupController.getGroup);
+router.get('/:id', groupController.getGroup);
 
 module.exports = router;

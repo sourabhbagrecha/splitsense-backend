@@ -46,7 +46,7 @@ exports.addExpense = async (req, res, next) => {
 exports.getExpense = async (req, res, next) => {
   const {id} = req.params;
   try {
-    const expense = await Expense.findById(id).populate('createdBy', 'name');
+    const expense = await Expense.findById(id).populate('createdBy', 'name').populate({ path: 'splitBy.user', model: 'User', select: 'name.full picture' }).exec();
     return res.status(200).json({msg: "Expense Found", expense})
   } catch (error) {
     console.log(error);
