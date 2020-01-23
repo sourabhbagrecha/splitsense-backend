@@ -7,7 +7,6 @@ exports.addFriend = async (req, res, next) => {
     const { accepterEmail, defaultCurrency } = req.body;
     const requester = await User.findOne({ _id: req.userId }).select('_id friends');
     const accepter = await User.findOne({ email: accepterEmail }).select('_id friends');
-    console.log("Requester Accept", requester, accepter)
     if(requester && accepter){
       const friend = await Friend.create({ 
         requester: requester._id,
@@ -17,12 +16,11 @@ exports.addFriend = async (req, res, next) => {
         second: accepter._id,
         activities: [],
         balance: 0,
-      })
-      accepter.friends.push({ person: requester._id, friendship: friend._id})
-      requester.friends.push({ person: accepter._id, friendship: friend._id})
-      const finalAccepter = await accepter.save()
-      const finalRequester = await requester.save()
-      console.log("FINAL::::::>>>", finalAccepter, finalRequester)
+      });
+      accepter.friends.push({ person: requester._id, friendship: friend._id});
+      requester.friends.push({ person: accepter._id, friendship: friend._id});
+      const finalAccepter = await accepter.save();
+      const finalRequester = await requester.save();
       return res.status(200).json({msg: "Friend added!", friend});
     } else {
 
@@ -39,10 +37,8 @@ exports.getFriends = async (req, res, next) => {
     const user = await User.findById(userId).lean();
     const friendsArray = user.friends.map(f => f.friendship);
     const friendsResponse = await Friend.find({ '_id': { $in: friendsArray }}).populate('requester', 'name email picture').populate('accepter', 'name email picture').exec();
-    console.log(userId, friendsResponse.map(f => ({requester : f.requester._id, accepter: f.accepter._id})))
     const friends = friendsResponse.map(f => {
       let friend = {_id: f._id};
-      console.log(f.requester._id.toString(), f.accepter._id.toString(), userId);
       if(f.requester._id.toString() === userId){ // Everything is working fine now, because the userId type and requesterId were not of the same type they caused heavy tension in the begining, Initially I put the equal-to sign but it wasn't working as expected, but when I used not-equal-to, surprisingly it worked.
         friend.name = f.accepter.name;
         friend.picture = f.accepter.picture;
@@ -78,12 +74,22 @@ exports.getFriendsForGroup = async (req, res, next) => {
   try {
     const {userId} = req;
     const user = await User.findById(userId).select('friends');
-    console.log("user:::::>>", user);
     const userFriends = user.friends.map(f => f.person);
-    console.log("userFriends:::::::>>>", userFriends);
     const friends = await User.find({ '_id': { $in: userFriends } }).select('name picture');
-    console.log("friends::::::::>>>", friends);
     return res.status(200).json({friends, msg: "Friends found!"});
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+exports.getAddExpenseFriendParticipants = async (req, res, next) => {
+  const {friendId} = req.params;
+  try {
+    const friend = await Friend.findById(friendId);
+    const participantsArray = [friend.requester, friend.accepter];
+    const participants = await User.find({"_id": { $in : participantsArray }}).select('name picture');
+    return res.status(200).json({participants, msg: "Participants found!"})
   } catch (error) {
     next(error);
   }

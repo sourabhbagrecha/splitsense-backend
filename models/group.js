@@ -21,7 +21,11 @@ const groupSchema = new Schema({
   activities: [{
     type: Schema.Types.ObjectId,
     ref: 'Activity'
-  }]
+  }],
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  }
 }, {timestamps: true});
 
 module.exports = mongoose.model('Group', groupSchema);
