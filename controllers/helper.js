@@ -61,7 +61,7 @@ exports.checkAuth = async (req, res, next) => {
   try {
     console.log(req.userId, req.emailId);
     const reqHeaders = req.get('Authorization');
-    res.status(200).json({reqHeaders});
+    res.status(200).json({reqHeaders, userId: req.userId});
   } catch (error) {
     next(error);
   }
