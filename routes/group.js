@@ -6,8 +6,9 @@ const expenseController = require("../controllers/expense");
 
 router.post('/new', isAuthenticated, groupController.createGroup);
 router.get('/fetch-all', isAuthenticated, groupController.getGroups);
-router.get('/:id', isAuthenticated, groupController.getGroup);
+router.get('/:groupId', isAuthenticated, groupController.getGroup);
 router.get('/participants/:groupId', isAuthenticated, groupController.getAddExpenseGroupParticipants);
+router.get('/:groupId/calculateTotals', groupController.calculateTotals);
 router.post('/:groupId/expense/new', isAuthenticated, expenseController.addExpense);
 
 module.exports = router;
