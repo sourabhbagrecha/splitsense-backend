@@ -2,22 +2,35 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const paymentSchema = new Schema({
-  type: {
-    type: String
-  },
   amount: {
+    type: Number,
+    required: true
+  },
+  currency: {
     type: String,
-    required: true
+    required: true,
+    default: 'INR'
   },
-  paidBy: {
+  from: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  recievedBy: {
+  to: {
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  belongsTo: {
+    type: Schema.Types.ObjectId
+  },
+  belongsType: {
+    type: String
   }
 }, {timestamps: true});
 

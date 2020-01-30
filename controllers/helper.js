@@ -3,8 +3,9 @@ const User = require("../models/user");
 
 exports.checkFriendship = async (req, res, next) => {
   try {
-    const { requesterId, accepterEmail } = req.body;
-    const requester = await User.findOne({ googleId: requesterId }).select('_id friends');
+    const { accepterEmail } = req.body;
+    const {userId} = req;
+    const requester = await User.findById(userId).select('_id friends');
     const accepter = await User.findOne({ email: accepterEmail }).select('_id friends');
     const areFriends = false;
     if(!accepter) return res.status(404).json({msg: "User with that email id does not exist"});
@@ -61,7 +62,7 @@ exports.checkAuth = async (req, res, next) => {
   try {
     console.log(req.userId, req.emailId);
     const reqHeaders = req.get('Authorization');
-    res.status(200).json({reqHeaders, userId: req.userId});
+    res.status(200).json({reqHeaders, userId: req.userId, email: req.emailId});
   } catch (error) {
     next(error);
   }

@@ -5,26 +5,26 @@ const User = require("../models/user");
 exports.addFriend = async (req, res, next) => {
   try {
     const { accepterEmail, defaultCurrency } = req.body;
-    const requester = await User.findOne({ _id: req.userId }).select('_id friends');
-    const accepter = await User.findOne({ email: accepterEmail }).select('_id friends');
-    if(requester && accepter){
-      const friend = await Friend.create({ 
-        requester: requester._id,
-        accepter: accepter._id,
-        defaultCurrency,
-        first: requester._id,
-        second: accepter._id,
-        activities: [],
-        balance: 0,
-      });
-      accepter.friends.push({ person: requester._id, friendship: friend._id});
-      requester.friends.push({ person: accepter._id, friendship: friend._id});
-      const finalAccepter = await accepter.save();
-      const finalRequester = await requester.save();
-      return res.status(200).json({msg: "Friend added!", friend});
-    } else {
-
+    const requester = await User.findById(req.userId).select('friends');
+    const accepter = await User.findOne({ email: accepterEmail }).select('friends');
+    if(requester._id.toString() === accepter._id.toString()){
+      return res.status(403).json({msg: "You can not add yourself as a friend!"});
     }
+    if(!accepter){
+      return res.status(403).json({msg: "User with this email address does not exists!"});
+    }
+    const friend = await Friend.create({ 
+      requester: requester._id,
+      accepter: accepter._id,
+      defaultCurrency,
+      activities: [],
+      balance: 0,
+    });
+    accepter.friends.push({ person: requester._id, friendship: friend._id});
+    requester.friends.push({ person: accepter._id, friendship: friend._id});
+    const finalAccepter = await accepter.save();
+    const finalRequester = await requester.save();
+    return res.status(200).json({msg: "Friend added!", friend});
   } catch (error) {
     console.log(error)
     return res.status(500).json({msg: "Internal server error"});
@@ -39,10 +39,10 @@ exports.getFriends = async (req, res, next) => {
     const friendsResponse = await Friend.find({ '_id': { $in: friendsArray }}).populate('requester', 'name email picture').populate('accepter', 'name email picture').exec();
     const friends = friendsResponse.map(f => {
       let friend = {_id: f._id};
-      if(f.requester._id.toString() === userId){ // Everything is working fine now, because the userId type and requesterId were not of the same type they caused heavy tension in the begining, Initially I put the equal-to sign but it wasn't working as expected, but when I used not-equal-to, surprisingly it worked.
+      if(f.requester._id.toString() === userId.toString()){ // Everything is working fine now, because the userId type and requesterId were not of the same type they caused heavy tension in the begining, Initially I put the equal-to sign but it wasn't working as expected, but when I used not-equal-to, surprisingly it worked.
         friend.name = f.accepter.name;
         friend.picture = f.accepter.picture;
-      } else if(f.accepter._id.toString() === userId){
+      } else if(f.accepter._id.toString() === userId.toString()){
         friend.name = f.requester.name;
         friend.pictue = f.requester.picture;
       } else {

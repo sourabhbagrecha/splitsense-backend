@@ -1,16 +1,54 @@
 const Activity = require("../models/activity");
+const Payment = require("../models/payment");
 const Expense = require("../models/expense");
+const Friend = require("../models/friend");
 const Group = require("../models/group");
 const User = require("../models/user");
+
+const checkAndMakeFriends = async (friend1Id, friend2Id, currency) => {
+  try {
+    const friend = await Friend.findOne({ 
+      $or: [
+        {requester: friend1Id, accepter: friend2Id},
+        {requester: friend2Id, accepter: friend1Id}
+      ]
+    }).select('_id').lean();
+    if(!friend){
+      const newFriend = await Friend.create({ 
+        requester: friend1Id,
+        accepter: friend2Id,
+        defaultCurrency: currency,
+        activities: [],
+        balance: 0
+      });
+      const friend1 = await User.findByIdAndUpdate(friend1Id, {$push: { friends: { person: friend2Id, friendship: newFriend._id}}}).select('friends name.full').lean();
+      const friend2 = await User.findByIdAndUpdate(friend2Id, {$push: { friends: { person: friend1Id, friendship: newFriend._id}}}).select('friends name.full').lean();
+      return newFriend;
+    }
+    return friend;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+}
 
 exports.createGroup = async (req, res, next) => {
   try {
     const {userId} = req;
     const {name, groupType, members, currency} = req.body;
-    const balances = group.members.map(m => ({balance: 0, user: m}));
+    members.push(userId);
+    const balances = members.map(m => ({balance: 0, user: m}));
     const transfers = [];
-    const group = await Group.create({name, groupType, members: [...members, userId], currency, createdBy: userId, balances, transfers});
-    const updates = await User.updateMany({ _id: {$in: [...members, userId]}}, {$push: { groups: group._id}});
+    const group = await Group.create({name, groupType, members, currency, createdBy: userId, balances, transfers});
+    console.log(members)
+    const updates = await User.updateMany({ _id: {$in: members}}, {$push: { groups: group._id}});
+    members.filter(m => m !== userId).forEach(async (m, i, arr) => {
+      for(let j=i+1; j < arr.length; j++){
+        if(arr[i] !== arr[j]){
+          console.log(await checkAndMakeFriends(arr[i], arr[j], currency))
+        }
+      }
+    });
     return res.status(201).json({groupId: group._id});
   } catch (error) {
     next(error);
@@ -23,6 +61,7 @@ exports.getGroup = async (req, res, next) => {
     const group = await Group.findById(groupId)
       .populate('balances.user', 'name.full picture');
     const activities = await Activity.find({ '_id': { $in: group.activities } });
+    console.log({group: group.balances})
     return res.status(200).json({group, activities, msg: "Group Found!"});
   } catch (error) {
     next(error);
@@ -70,20 +109,32 @@ exports.calculateTotals = async (req, res, next) => {
     const balances = group.members.map(m => ({balance: 0, user: m}));
     const expenseActivities = (await Activity.find({ "_id": { $in: group.activities}, "actType": "expense", "operation": "create"}).select('refId').lean()).map((v, i) => (v.refId));
     const expenses = await Expense.find({ "_id": expenseActivities}).select('splitBy paidBy').lean();
+    
+    const paymentActivities = (await Activity.find({ "_id": { $in: group.activities}, "actType": "payment", "operation": "create"}).select('refId').lean()).map((v, i) => (v.refId));
+    const payments = await Payment.find({ "_id": paymentActivities}).select('from to amount').lean();
     expenses.forEach((expense, i) => {
       balances.forEach(member => {
         expense.splitBy.filter(s => s.amount > 0).forEach((split, j) => {
           if(split.user.toString() === member.user.toString()){
-            member.balance -= split.amount;
+            member.balance -= parseFloat(split.amount);
           }
         })
         expense.paidBy.filter(p => p.amount > 0).forEach((paid, j) => {
           if(paid.user.toString() === member.user.toString()){
-            member.balance += paid.amount;
+            member.balance += parseFloat(paid.amount);
           }
         })
       })
     });
+    payments.forEach((payment, i) => {
+      balances.forEach(member => {
+        if(payment.from.toString() === member.user.toString()){
+          member.balance += parseFloat(payment.amount);
+        } else if(payment.to.toString() === member.user.toString()){
+          member.balance -= parseFloat(payment.amount);
+        }
+      })
+    })
     //payments remaining!
 
     const sortDescending = (a, b) => b.balance - a.balance;
