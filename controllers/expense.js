@@ -4,6 +4,9 @@ const Friend = require('../models/friend');
 const Group = require('../models/group');
 const User = require('../models/user');
 
+const groupController = require('./group');
+const friendController = require('./friend');
+
 exports.addExpense = async (req, res, next) => {
   try {
     const {friendId, groupId} = req.params;
@@ -11,18 +14,23 @@ exports.addExpense = async (req, res, next) => {
     const newExpense = { title, amount, category, currency, description, splitBy, paidBy, createdBy: req.userId, splitMethod };
     newExpense.belongsType = friendId ? "Friend" : "Group";
     newExpense.belongsTo = friendId || groupId;
+    const concernedSet = new Set();
+    splitBy.forEach(split => { split.amount > 0 && concernedSet.add(split.user) });
+    paidBy.forEach(paid => { paid.amount > 0 && concernedSet.add(paid.user) });
     const expense = await Expense.create(newExpense);
-    const activity = await Activity.create({actType: "expense", operation: "create", refId: expense._id})
+    const activity = await Activity.create({actType: "expense", operation: "create", refId: expense._id, concerned: Array.from(concernedSet)});
     if(friendId) {
-      await Friend.findByIdAndUpdate(friendId, {$push: { "activities": activity._id} })
+      await Friend.findByIdAndUpdate(friendId, {$push: { "activities": activity._id} });
+      await friendController.calculateTotals(friendId);
     }
     else if(groupId) {
-      await Group.findByIdAndUpdate(groupId, {$push: { "activities": activity._id} })
+      await Group.findByIdAndUpdate(groupId, {$push: { "activities": activity._id} });
+      await groupController.calculateTotals(groupId);
     }
     return res.status(201).json({ msg: "Expense Saved!", expense });        
   } catch (error) {
     console.log(error);
-    return res.status(500).json({msg: "Internal server error!"})
+    return res.status(500).json({msg: "Internal server error!"});
   }
 }
 

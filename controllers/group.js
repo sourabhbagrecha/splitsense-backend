@@ -5,22 +5,26 @@ const Friend = require("../models/friend");
 const Group = require("../models/group");
 const User = require("../models/user");
 
-const checkAndMakeFriends = async (friend1Id, friend2Id, currency) => {
+const checkAndMakeFriends = async (friend1Id, friend2Id, currency, groupId) => {
   try {
     const friend = await Friend.findOne({ 
       $or: [
         {requester: friend1Id, accepter: friend2Id},
         {requester: friend2Id, accepter: friend1Id}
       ]
-    }).select('_id').lean();
+    }).select('_id groups');
+    friend.groups.push(groupId);
+    await friend.save();
     if(!friend){
       const newFriend = await Friend.create({ 
         requester: friend1Id,
         accepter: friend2Id,
         defaultCurrency: currency,
         activities: [],
-        balance: 0
+        balance: 0,
       });
+      newFriend.groups.push(groupId);
+      await newFriend.save();
       const friend1 = await User.findByIdAndUpdate(friend1Id, {$push: { friends: { person: friend2Id, friendship: newFriend._id}}}).select('friends name.full').lean();
       const friend2 = await User.findByIdAndUpdate(friend2Id, {$push: { friends: { person: friend1Id, friendship: newFriend._id}}}).select('friends name.full').lean();
       return newFriend;
@@ -45,7 +49,7 @@ exports.createGroup = async (req, res, next) => {
     members.filter(m => m !== userId).forEach(async (m, i, arr) => {
       for(let j=i+1; j < arr.length; j++){
         if(arr[i] !== arr[j]){
-          console.log(await checkAndMakeFriends(arr[i], arr[j], currency))
+          console.log(await checkAndMakeFriends(arr[i], arr[j], currency, groupId))
         }
       }
     });
@@ -91,19 +95,7 @@ exports.getAddExpenseGroupParticipants = async (req, res, next) => {
   }
 }
 
-// exports.getBalances = async (req, res, next) => {
-//   const {groupId} = req.params;
-//   try {
-//     const group = await Group.findById(groupId).select
-//     const participants = await User.find({"_id": { $in : group.members }}).select('name picture');
-//     return res.status(200).json({participants, msg: "Participants found!"})
-//   } catch (error) {
-//     next(error);
-//   }
-// }
-
-exports.calculateTotals = async (req, res, next) => {
-  const {groupId} = req.params;
+exports.calculateTotals = async (groupId) => {
   try {
     const group = await Group.findById(groupId).select('activities members').populate('activities', '_id').lean();
     const balances = group.members.map(m => ({balance: 0, user: m}));
@@ -135,14 +127,10 @@ exports.calculateTotals = async (req, res, next) => {
         }
       })
     })
-    //payments remaining!
-
     const sortDescending = (a, b) => b.balance - a.balance;
     let creditors = balances.filter(m => m.balance > 0).sort(sortDescending);
     let debtors = balances.filter(m => m.balance < 0).map(m => ({...m, balance: -1*(m.balance)})).sort(sortDescending);
     const transfers = [];
-    let i = 0;
-    console.log({creditors, debtors});
     while(debtors[0].balance > 0 && creditors[0].balance > 0){
       let from, to, balance;
       let debtorBalance = debtors[0].balance;
@@ -165,10 +153,10 @@ exports.calculateTotals = async (req, res, next) => {
       creditors = creditors.sort(sortDescending);
       debtors = debtors.sort(sortDescending);
     }
-    console.log({transfers});
-    const groupUpdated = await Group.findByIdAndUpdate(groupId, { $set: {transfers, balances}}, {new: true})
-    return res.status(200).json({msg: "Totals calculated!", groupUpdated });
+    const updatedGroup = await Group.findByIdAndUpdate(groupId, { $set: {transfers, balances}}, {new: true}).select('_id balances').lean();
+    return updatedGroup;
+
   } catch (error) {
-    next(error);
+    console.log(error);
   }
 }

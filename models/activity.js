@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const {ObjectId} = Schema.Types;
 
 const activitySchema = Schema({
   actType: {
@@ -11,7 +12,17 @@ const activitySchema = Schema({
     required: true
   },
   refId: {
-    type: Schema.Types.ObjectId
+    type: ObjectId,
+    required: true
+  },
+  concerned: [{
+    type: ObjectId,
+    ref: 'User'
+  }],
+  by: {
+    type: ObjectId,
+    ref: 'User',
+    required: true
   }
 }, {timestamps: true});
 

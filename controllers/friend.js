@@ -1,6 +1,8 @@
 const Activity = require("../models/activity");
 const Friend = require("../models/friend");
 const User = require("../models/user");
+const Expense = require("../models/expense");
+const Payment = require("../models/payment")
 
 exports.addFriend = async (req, res, next) => {
   try {
@@ -60,7 +62,7 @@ exports.getFriend = async (req, res, next) => {
   try {
     const {id} = req.params;
     const {userId} = req;
-    const friend = await Friend.findById(id);
+    const friend = await Friend.findById(id).select('requester accepter activities balances transfer defaultCurrency');
     const userIsRequester = friend.requester.toString() === userId;
     const friendPerson = await User.findById(userIsRequester ? friend.accepter : friend.requester).select('email name picture');
     const activities = await Activity.find({ '_id': {$in : friend.activities} });
@@ -90,6 +92,53 @@ exports.getAddExpenseFriendParticipants = async (req, res, next) => {
     const participantsArray = [friend.requester, friend.accepter];
     const participants = await User.find({"_id": { $in : participantsArray }}).select('name picture');
     return res.status(200).json({participants, msg: "Participants found!"})
+  } catch (error) {
+    next(error);
+  }
+}
+
+exports.calculateTotals = async (friendId) => {
+  try {
+    const friend = await Friend.findById(friendId).select('activities').populate('activities requester accepter', '_id').lean();
+    const members = [friend.requester._id, friend.accepter._id];
+    const balances = members.map(m => ({balance: 0, user: m}));
+    const expenseActivities = (await Activity.find({ "_id": { $in: friend.activities}, "actType": "expense", "operation": "create"}).select('refId').lean()).map((v, i) => (v.refId));
+    const expenses = await Expense.find({ "_id": expenseActivities}).select('splitBy paidBy').lean();
+    
+    const paymentActivities = (await Activity.find({ "_id": { $in: friend.activities}, "actType": "payment", "operation": "create"}).select('refId').lean()).map((v, i) => (v.refId));
+    const payments = await Payment.find({ "_id": paymentActivities}).select('from to amount').lean();
+    expenses.forEach((expense) => {
+      balances.forEach(member => {
+        expense.splitBy.filter(s => s.amount > 0).forEach((split) => {
+          if(split.user.toString() === member.user.toString()){
+            member.balance -= parseFloat(split.amount);
+          }
+        })
+        expense.paidBy.filter(p => p.amount > 0).forEach((paid) => {
+          if(paid.user.toString() === member.user.toString()){
+            member.balance += parseFloat(paid.amount);
+          }
+        })
+      })
+    });
+    payments.forEach((payment, i) => {
+      balances.forEach(member => {
+        if(payment.from.toString() === member.user.toString()){
+          member.balance += parseFloat(payment.amount);
+        } else if(payment.to.toString() === member.user.toString()){
+          member.balance -= parseFloat(payment.amount);
+        }
+      })
+    });
+    let transfer = {};
+    if(balances.find(b => b.balance > 0 )){
+      const to = balances.find(b => b.balance > 0 ).user;
+      const from = balances.find(b => b.balance < 0).user;
+      const balance = balances.find(b => b.balance > 0).balance;
+      transfer = {to, from, balance};
+    }
+    const friendUpdated = await Friend.findByIdAndUpdate(friendId, { $set: {balances, transfer}}, {new: true}).select('_id balances');
+    return friendUpdated;
   } catch (error) {
     next(error);
   }

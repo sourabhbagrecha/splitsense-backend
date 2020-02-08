@@ -8,7 +8,7 @@ router.post('/new', isAuthenticated, groupController.createGroup);
 router.get('/fetch-all', isAuthenticated, groupController.getGroups);
 router.get('/:groupId', isAuthenticated, groupController.getGroup);
 router.get('/participants/:groupId', isAuthenticated, groupController.getAddExpenseGroupParticipants);
-router.get('/:groupId/calculateTotals', groupController.calculateTotals);
+// router.get('/:groupId/calculateTotals', groupController.calculateTotals);
 router.post('/:groupId/expense/new', isAuthenticated, expenseController.addExpense);
 
 module.exports = router;

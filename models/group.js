@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const {ObjectId} = Schema.Types;
 
 const groupSchema = new Schema({
   name: {
@@ -15,31 +16,31 @@ const groupSchema = new Schema({
     required: true
   },
   members: [{
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'User'
   }],
   activities: [{
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'Activity'
   }],
   createdBy: {
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'User'
   },
   balances: [{
     user: {
-      type: Schema.Types.ObjectId,
+      type: ObjectId,
       ref: 'User'
     },
     balance: Number
   }],
   transfers: [{
     from: {
-      type: Schema.Types.ObjectId,
+      type: ObjectId,
       ref: 'User'
     },
     to: {
-      type: Schema.Types.ObjectId,
+      type: ObjectId,
       ref: 'User'
     },
     balance: Number

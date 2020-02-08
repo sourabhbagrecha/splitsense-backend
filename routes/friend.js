@@ -10,6 +10,7 @@ router.get('/participants/:friendId', isAuthenticated, friendController.getAddEx
 router.post('/new', isAuthenticated, friendController.addFriend);
 router.get('/:id', isAuthenticated, friendController.getFriend);
 router.post('/:friendId/expense/new', isAuthenticated, expenseController.addExpense);
+// router.get('/:friendId/calculateTotals', friendController.calculateTotals)
 router.get('/:friendId/:id',isAuthenticated, expenseController.getExpense);
 
 module.exports = router;

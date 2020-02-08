@@ -1,14 +1,15 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const {ObjectId} = Schema.Types;
 
 const friendSchema = new Schema({
   requester: {
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: "User",
     required: true
   },
   accepter:{
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: "User",
     required: true
   },
@@ -17,8 +18,30 @@ const friendSchema = new Schema({
     required: true
   },
   activities: [{
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'Activity'
+  }],
+  balances: [{
+    user: {
+      type: ObjectId,
+      ref: 'User'
+    },
+    balance: Number
+  }],
+  transfer: {
+    from: {
+      type: ObjectId,
+      ref: 'User'
+    },
+    to: {
+      type: ObjectId,
+      ref: 'User'
+    },
+    balance: Number
+  },
+  groups: [{
+    type: ObjectId,
+    ref: 'Group'
   }]
 }, {timestamps: true});
 

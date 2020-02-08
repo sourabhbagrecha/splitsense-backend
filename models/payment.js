@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const {ObjectId} = Schema.Types;
+
 const paymentSchema = new Schema({
   amount: {
     type: Number,
@@ -12,25 +14,29 @@ const paymentSchema = new Schema({
     default: 'INR'
   },
   from: {
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'User',
     required: true
   },
   to: {
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'User',
     required: true
   },
   createdBy: {
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'User',
     required: true
   },
   belongsTo: {
-    type: Schema.Types.ObjectId
+    type: ObjectId
   },
   belongsType: {
     type: String
+  },
+  deleted: {
+    type: Boolean,
+    default: false
   }
 }, {timestamps: true});
 

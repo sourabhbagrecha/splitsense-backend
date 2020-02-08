@@ -9,6 +9,7 @@ const groupRoutes = require('./group');
 const mainRoutes = require('./main');
 const userRoutes = require('./user');
 const paymentRoutes = require('./payment');
+const activityRoutes = require('./activity');
 
 router.use('/', mainRoutes);
 router.use('/expense', expenseRoutes);
@@ -18,5 +19,6 @@ router.use('/user', userRoutes);
 router.use('/helper', helperRoutes);
 router.use('/testing', testingRoutes);
 router.use('/payment', paymentRoutes);
+router.use('/activity', activityRoutes);
 
 module.exports = router;

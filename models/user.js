@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const {ObjectId} = Schema.Types;
 
 const userSchema = new Schema({
   name: {
@@ -24,26 +25,26 @@ const userSchema = new Schema({
     type: String //Photo URL
   },
   payments: [{
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'Payment'
   }],
   expenses: [{
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'Expense'
   }],
   googleId: String,
   friends: [{
     person: {
-      type: Schema.Types.ObjectId,
+      type: ObjectId,
       ref: 'User'
     },
     friendship: {
-      type: Schema.Types.ObjectId,
+      type: ObjectId,
       ref: 'Friend'
     }
   }],
   groups: [{
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'Group'
   }]
 }, {timestamps: true});

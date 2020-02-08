@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const {ObjectId} = Schema.Types;
 
 const expenseSchema = new Schema({
   title: {
@@ -25,7 +26,7 @@ const expenseSchema = new Schema({
   },
   paidBy: [{
     user: {
-      type: Schema.Types.ObjectId,
+      type: ObjectId,
       ref: 'User'
     },
     amount: {
@@ -34,7 +35,7 @@ const expenseSchema = new Schema({
   }],
   splitBy: [{
     user: {
-      type: Schema.Types.ObjectId,
+      type: ObjectId,
       ref: 'User'
     },
     amount: {
@@ -42,14 +43,18 @@ const expenseSchema = new Schema({
     }
   }],
   createdBy:{
-    type: Schema.Types.ObjectId,
+    type: ObjectId,
     ref: 'User'
   },
   belongsTo: {
-    type: Schema.Types.ObjectId
+    type: ObjectId
   },
   belongsType: {
     type: String
+  },
+  deleted: {
+    type: Boolean,
+    default: false
   }
 }, {timestamps: true});
 
