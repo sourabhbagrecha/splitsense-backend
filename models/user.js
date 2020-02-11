@@ -15,6 +15,9 @@ const userSchema = new Schema({
     type: String,
     required: true
   },
+  password: {
+    type: String
+  },
   phone: {
     type: Number
   },
@@ -32,7 +35,6 @@ const userSchema = new Schema({
     type: ObjectId,
     ref: 'Expense'
   }],
-  googleId: String,
   friends: [{
     person: {
       type: ObjectId,

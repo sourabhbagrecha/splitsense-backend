@@ -8,10 +8,12 @@ const friendRoutes = require('./friend');
 const groupRoutes = require('./group');
 const mainRoutes = require('./main');
 const userRoutes = require('./user');
+const authRoutes = require('./auth');
 const paymentRoutes = require('./payment');
 const activityRoutes = require('./activity');
 
 router.use('/', mainRoutes);
+router.use('/auth', authRoutes);
 router.use('/expense', expenseRoutes);
 router.use('/friend', friendRoutes);
 router.use('/group', groupRoutes);
